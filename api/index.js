@@ -24,6 +24,7 @@ const bookSchema = new mongoose.Schema({
 
 const purchaseSchema = new mongoose.Schema({
     bookId: mongoose.Schema.Types.ObjectId,
+    title: String,
     price: Number,
     purchaseDate: { type: Date, default: Date.now }
 });
@@ -58,7 +59,60 @@ app.get('/books/search', async (req, res) => {
     }
 });
 
-// c) Purchase a book by ID and process the payment
+// c) Get book details by ID
+app.get('/books/:id', async (req, res) => {
+    try {
+        const book = await Book.findById(req.params.id);
+        if (book) {
+            res.json(book);
+        } else {
+            res.status(404).json({ message: 'Book not found' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: 'Error retrieving book details', error });
+    }
+});
+
+// d) Create a new book
+app.post('/books', async (req, res) => {
+    try {
+        const newBook = new Book(req.body);
+        await newBook.save();
+        res.status(201).json(newBook);
+    } catch (error) {
+        res.status(500).json({ message: 'Error creating book', error });
+    }
+});
+
+// e) Update a book by ID
+app.put('/books/:id', async (req, res) => {
+    try {
+        const updatedBook = await Book.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        if (updatedBook) {
+            res.json(updatedBook);
+        } else {
+            res.status(404).json({ message: 'Book not found' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: 'Error updating book', error });
+    }
+});
+
+// f) Delete a book by ID
+app.delete('/books/:id', async (req, res) => {
+    try {
+        const deletedBook = await Book.findByIdAndDelete(req.params.id);
+        if (deletedBook) {
+            res.json({ message: 'Book deleted successfully' });
+        } else {
+            res.status(404).json({ message: 'Book not found' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: 'Error deleting book', error });
+    }
+});
+
+// g) Purchase a book by ID and process the payment
 app.post('/books/purchase/:id', async (req, res) => {
     try {
         const bookId = req.params.id;
@@ -81,7 +135,7 @@ app.post('/books/purchase/:id', async (req, res) => {
     }
 });
 
-// Endpoint to list all purchases
+// h) Endpoint to list all purchases
 app.get('/purchases', async (req, res) => {
     try {
         const purchases = await Purchase.find();
